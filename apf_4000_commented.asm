@@ -243,7 +243,6 @@ SystemInitDone:
 ; note  : the amount constants are in ASCII numbers, so if you want a 1, you specify $31
 ; note 2: the 0 to skip amount of players prompt is literal 0 ($00)
 
-
 CartSignatureFail:
 	bsr  Sub_WaitForPlayerInput ; no cartridge :(
 		anda #$03
@@ -251,7 +250,7 @@ CartSignatureFail:
 	jmp  InitRocketPatrol
 
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Sub_WaitForPlayerInput:
 @Wait:
 	jsr  Sub_GetButtonPlayer2
@@ -263,10 +262,12 @@ Sub_WaitForPlayerInput:
 JumpReturn:
 	rts  
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 String_Players:
 .db "HOW`MANY`PLAYERS?", $FF
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Sub_PrintSemigraphics:
 		staa PrintSG_PrintLength
 		stx  PrintSG_Dest
@@ -305,10 +306,9 @@ Sub_PrintSemigraphics:
 		stx  PrintSG_Source
 	bra @loop ; gets next frame
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-; called from above
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Sub_AddByteToPointer:
 		stx  Math_TempHigh
 		adda Math_TempLow
@@ -319,8 +319,8 @@ Sub_AddByteToPointer:
 		ldx  Math_TempHigh
 	rts  
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Sub_SubtractBFromX:
 		psha 
 		stx  Math_TempHigh
@@ -334,12 +334,9 @@ Sub_SubtractBFromX:
 		pula 
 	rts  
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-; called from three places, one is a subroutine
-Sub_PrintString:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Sub_PrintString: ; called from three places, one is a subroutine
 		stx  PrintStr_Dest   ; store destination pointer
 @Loop:
 	bsr  Sub_GetTextChar ; get character
@@ -765,7 +762,7 @@ String_RocketMenu:
 ; MONOCHROME GRAPHICS GAMES WILL ADD A TEXT HUD THAT
 ; MAY CAUSE THE VDG ADDRESS INCREMENTER TO BEHAVE WEIRD
 
-; MAME ALWAYS ASSUME AN OFFSET CORRESPONDING TO SPACE PATROL'S HUD
+; MAME ALWAYS ASSUME AN OFFSET CORRESPONDING TO ROCKET PATROL'S HUD
 ; USE COLOR GRAPHICS FOR HOMEBREW BECAUSE IT ASSUMES NO OFFSET
 
 ; or convince MAME devs about this... my best wishes to you
@@ -899,7 +896,6 @@ Main_NoMissile:
 ; * this game seems to fire on both edges of vblank so it counts half-seconds
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 Sub_InitMissileGraphics:
 		ldx  #$0770 ; location of graphics tile 17, going to a mirror of $370 for some weird reason
 	jsr  Sub_ZeroFill_16
@@ -1098,8 +1094,6 @@ PlayerIsComputer:
 ;    //////////////////////////////////////////////////////
 ;   ///                interrupt code                  ///
 ;  //////////////////////////////////////////////////////
-
-; one of the locals loaded into X from the IRQ vector
 Interrupt_FrameEnd:
 		ldaa $2003 ; interrupts configuration (CB1)
 		anda #-4;#$FC ; 1111 1100
@@ -1514,7 +1508,7 @@ GFX_ShipData:
 .dw $0280 ; starting location in g-tile RAM for the ship to be copied into
 
 GFX_ShipSprite:
-.db %00000000
+.db %00000000 ; nose of the ship
 .db %00000000
 .db %00000000
 .db %00000000
@@ -1565,7 +1559,7 @@ GFX_ShipSprite:
 .db %00111011
 .db %11111111
 
-.db %11110000
+.db %11110000 ; rear of the ship
 .db %11000000
 .db %11000000
 .db %10000000
