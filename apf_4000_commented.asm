@@ -75,50 +75,35 @@ BANKS 1
 .ENDRO
 
 ; i would do a RAM section but the way RAM is laid out here is painful
-
-; 1C5~1C6: interrupt vector 1 address
-; 1FC: interrupt hook 1 flag, takes the vector above if it's set to a non-zero value
-
-; 1C7~1C8: interrupt vector 2 address
-; 1FD: interrupt hook 2 flag, takes the vector above if it's set to a non-zero value
-
-; 01FA
-; 01EA
-
-
-
-.DEFINE Keys_BitCnt     $01E5
-.DEFINE Keys_RowCnt     $01EB
-.DEFINE Keys_PlayerPtr  $01EC
+.DEFINE Keys_BitCnt          $01E5
+.DEFINE Keys_RowCnt          $01EB
+.DEFINE Keys_PlayerPtr       $01EC
 .DEFINE Keys_KeyCodePtrHigh  $01F0
 .DEFINE Keys_KeyCodePtrLow   $01F1
-.DEFINE Keys_Current    $01F2
-.DEFINE Keys_P1LastRow  $01F3
-.DEFINE Keys_P1LastKey  $01F4
-.DEFINE Keys_P2LastRow  $01F5
-.DEFINE Keys_P2LastKey  $01F6
-.DEFINE Keys_CurRowSel  $01F7
+.DEFINE Keys_Current         $01F2
+.DEFINE Keys_P1LastRow       $01F3
+.DEFINE Keys_P1LastKey       $01F4
+.DEFINE Keys_P2LastRow       $01F5
+.DEFINE Keys_P2LastKey       $01F6
+.DEFINE Keys_CurRowSel       $01F7
 
-
+; semigraphics function (APF logo)
 .DEFINE PrintSG_Source        $01E6
 .DEFINE PrintSG_Dest          $01E8
 .DEFINE PrintSG_PrintLength   $01EA
 .DEFINE PrintSG_FrameLength   $01EB
 .DEFINE PrintSG_NewLineLength $01ED
+.DEFINE PrintSG_WorkSource    $04
 
-.DEFINE PrintSG_WorkSource $04
-
+; 16-bit add/sub functions
 .DEFINE Math_TempHigh $01EE
 .DEFINE Math_TempLow  $01EF
 
+; string function
 .DEFINE PrintStr_Dest   $04
 .DEFINE PrintStr_Source $06
 
-.DEFINE PosSound_WaitCnt $01EC ; missile positioning sound
-
-.DEFINE PopSlide_SaveStack $01E8
-.DEFINE PopSlide_SourcePtr $01E6
-
+; interrupt vectors
 .DEFINE I60J   $01C5
 .DEFINE I60    $01FC
 .DEFINE ISECJ  $01C7
@@ -127,40 +112,45 @@ BANKS 1
 .DEFINE TIME   $01FB
 .DEFINE SECOND $01F9
 .DEFINE MINUTE $01FA
+; these are the official names as seen on the manual linked near the start of this file
+; they're not very descriptive... but i hope to make it easier to search for them
 
+; score keeping and game control
+.DEFINE Score_P1            $018F
+.DEFINE Score_P2            $018E
+.DEFINE Score_HUDPtrHigh    $0192
+.DEFINE Score_HUDPtrLow     $0193
+.DEFINE ScoreSound_WaitCnt  $015C
+.DEFINE PlayerStatePtr      $0190
 
-.DEFINE PlayerStatePtr     $0190
-
+; player missile
 .DEFINE Missile_XPos       $015D
 .DEFINE Missile_ShootTime  $015F
+.DEFINE Missile_TileAddr   $0158
+.DEFINE Missile_ShipPos    $015A
 
-.DEFINE ScoreSound_WaitCnt     $015C
-
-.DEFINE Score_P1         $018F
-.DEFINE Score_P2         $018E
-.DEFINE Score_HUDPtrHigh $0192
-.DEFINE Score_HUDPtrLow  $0193
-
-.DEFINE Temp_High $01E8
-.DEFINE Temp_Low  $01E9
-
-.DEFINE Ship_TempPtr $0140
-.DEFINE Ship_BottomVars $0142
-.DEFINE Ship_MiddleVars $014C
-.DEFINE Ship_TopVars $0152
-.DEFINE Ship_TempNewPos $015A
-.DEFINE Ship_TempNewPosLow $015B
-
+; spaceships (rockets?)
+.DEFINE Ship_TempPtr        $0140
+.DEFINE Ship_BottomVars     $0142
+.DEFINE Ship_MiddleVars     $014C
+.DEFINE Ship_TopVars        $0152
+.DEFINE Ship_TempNewPos     $015A
+.DEFINE Ship_TempNewPosLow  $015B
 .DEFINE Ship_BottomResetPos $0144
 .DEFINE Ship_MiddleResetPos $014E
-.DEFINE Ship_TopResetPos $0154
+.DEFINE Ship_TopResetPos    $0154
 
+; star background
 .DEFINE Stars_TempPtr $01C9
 .DEFINE Stars_BaseVar $0181
 .DEFINE Stars_TileNum $015A
 
-.DEFINE Missile_TileAddr $0158
-.DEFINE Missile_ShipPos  $015A
+; misc
+.DEFINE PosSound_WaitCnt $01EC ; missile positioning sound
+.DEFINE PopSlide_SaveStack $01E8
+.DEFINE PopSlide_SourcePtr $01E6
+.DEFINE Temp_High          $01E8
+.DEFINE Temp_Low           $01E9
 
 .BANK 0 SLOT 0
 .ORGA $4000
@@ -425,14 +415,6 @@ Sub_GetTextChar:
 
 ; always have MSB set to 1
 
-; 
-; 
-; 
-; 
-; 
-; 
-; 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; this routine reads the player inputs
@@ -464,7 +446,6 @@ Sub_GetTextChar:
 
 ; ? = Cl key
 ; ! = En key
-
 
 
 Data_ControllerKeyCodes:
@@ -610,8 +591,6 @@ Sub_CountSetBits:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 		ldab #$05 ; 426C - unused instruction
-
-
 Sub_PlayerMoveSound:
 		stab PosSound_WaitCnt ; wait reload
 	bsr  Sub_ToggleSoundLatch
@@ -630,7 +609,6 @@ Sub_PlayerMoveSound:
 	bne  @Wait1
 	rts  
 
-
 ; suspiciously sound generation shaped
 ; it is sound!
 Sub_ToggleSoundLatch:
@@ -640,7 +618,6 @@ Sub_ToggleSoundLatch:
 		staa $2003
 		cli  
 	rts  
-
 
 ClearScreen:
 		ldaa #-128;#$80
@@ -658,7 +635,6 @@ ClearScreenNoImm:
 ;    //////////////////////////////////////////////////////
 ;   ///             global interrupt vector            ///
 ;  //////////////////////////////////////////////////////
-
 IRQ:
 		ldaa $2002 ; acknowledge the interrupt, or else it'll fire again when returning
 		tst  I60 ; set this to anything non-zero
@@ -701,12 +677,7 @@ IRQ:
 		staa MINUTE
 	rti  
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; unrelated subroutine
-
-
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; unrelated subroutine
 Sub_Popslide:
 		psha 
 		sei  
@@ -725,7 +696,6 @@ Sub_Popslide:
 	rts  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 IRQ_HundredMinutes:
 		clr  MINUTE
 	rti
@@ -818,12 +788,6 @@ String_RocketMenu:
 ;    //////////////////////////////////////////////////////
 ;   ///           built-in game initialization         ///
 ;  //////////////////////////////////////////////////////
-
-
-
-; these are the official names as seen on the manual linked near the start of this file
-; they're not very descriptive... but i hope to make it easier to search for them
-
 InitRocketPatrol:
 		ldaa $2002
 		anda #$3F
@@ -831,8 +795,8 @@ InitRocketPatrol:
 		staa $2002
 		ldaa $2001
 		anda #-57;#$C7  ;11000111
-		oraa #$38  ;00111000 could be ored directly, but could be a 'just in case' scenario where another configuration is needed
-		staa $2001 ; this sets CA2 to mpu-controlled output mode and to a level of 1, which will turn text orange and the ships white
+		oraa #$38       ;00111000 could be ored directly, but could be a 'just in case' scenario where another configuration is needed
+		staa $2001      ; this sets CA2 to mpu-controlled output mode and to a level of 1, which will turn text orange and the ships white
 		clra 
 	jsr  ClearScreenNoImm ; that area becomes tile data now so clear it to 0 instead of black semigraphics
 		ldx  #String_RocketPatrolHUD
@@ -845,7 +809,7 @@ InitRocketPatrol:
 		deca 
 	beq  @TwoPlayers
 		ldx  #String_COMPUTER
-		ldab #$08   ; length of string (just computer)
+		ldab #$08 ; length of string (just computer)
 		ldaa #$31
 	jsr  Sub_HUDPrintString
 		ldx  #PlayerIsComputer
@@ -879,11 +843,11 @@ InitRocketPatrol:
 		ldaa #-64;#$C0
 		ldx  #$0350 ; star tile
 		staa $07,x
-		ldx  #GFX_StarsData ; the little data after the computer fire string?
+		ldx  #GFX_StarsData
 		stx  PopSlide_SourcePtr
 		ldx  #Stars_BaseVar
 		ldab #$0C
-	jsr  Sub_Popslide ; some set of initial ram values?
+	jsr  Sub_Popslide
 	jsr  Sub_DrawStarField
 
 ; initialize ships
@@ -936,8 +900,6 @@ Main_NoMissile:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; initializes the missile graphics?
-; some kind of init routine? because firing a missile doesn't reset its X position
 Sub_InitMissileGraphics:
 		ldx  #$0770 ; location of graphics tile 17, going to a mirror of $370 for some weird reason
 	jsr  Sub_ZeroFill_16
@@ -1182,8 +1144,6 @@ CommonReturn3:
 ;    //////////////////////////////////////////////////////
 ;   ///                handle missile                  ///
 ;  //////////////////////////////////////////////////////
-
-
 MoveAndCheckMissile:
 		ldaa Missile_ShootTime
 	beq  CommonReturn3
@@ -1268,8 +1228,6 @@ MissileDone:
 ;    //////////////////////////////////////////////////////
 ;   ///                 handle stars                   ///
 ;  //////////////////////////////////////////////////////
-
-
 Sub_ScrollStarField:
 		ldx  #$0350 ; star g-tile location
 		clc  
@@ -1333,8 +1291,6 @@ Sub_ClearStarField:
 ;    //////////////////////////////////////////////////////
 ;   ///                 handle ships                   ///
 ;  //////////////////////////////////////////////////////
-
-
 Sub_ScrollSpriteRow:
 		ldx  #Ship_BottomVars ; first ship and header
 		stx  Ship_TempPtr
@@ -1521,7 +1477,6 @@ Sub_FillLoop:
 ;    //////////////////////////////////////////////////////
 ;   ///                  other data                    ///
 ;  //////////////////////////////////////////////////////
-
 String_RocketPatrolHUD:
 .db $DF, $83 ; prints 32 semigraphics cells, only two bottom blocks set, green chroma
 .db $C1, $83
