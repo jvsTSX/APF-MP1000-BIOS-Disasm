@@ -159,8 +159,8 @@ SWI_J:
 START:
 ; reset and other unused vectors (NMI and SWI)
 		clra 
-		staa I60.w
-		staa ISEC.w
+		staa I60
+		staa ISEC
 		lds  #$01E4
 		sei  
 		ldab #$35
@@ -173,46 +173,46 @@ START:
 		ldab #$34
 		stab $2001
 		ldaa #-17;#$EF
-		staa Keys_CurRowSel.w
-		clr  Keys_P1LastKey.w
-		clr  Keys_P2LastKey.w
+		staa Keys_CurRowSel
+		clr  Keys_P1LastKey
+		clr  Keys_P2LastKey
 		ldaa #$1F
 		staa $2002
 		cli  
 	jmp  SystemInitDone
 
 Sub_DrawInitialScreen:
-	jsr  ClearScreen ; subroutine
+	jsr  ClearScreen
 		ldx  #GFX_APF_Logo
-		stx  PrintSG_Source.w
-		ldx  #$0208 ; VRAM (row 0, 1/4 col)
+		stx  PrintSG_Source
+		ldx  #$0208             ; VRAM (row 0, 1/4 col)
 		ldaa #$06
 	jsr  Sub_PrintSemigraphics
 		ldx  #String_RocketMenu
 		stx  PrintStr_Source    ; source pointer
-		ldx  #$0268 ; VRAM (row 3, 1/4 col))
+		ldx  #$0268             ; VRAM (row 3, 1/4 col))
 	jmp  Sub_PrintString
 
 SystemInitDone:
 	bsr  Sub_DrawInitialScreen
-		ldaa $8000 ; first byte from cartridge
-		cmpa #-69;#$BB  ; presence check, if not this byte, then assume no cartridge is inserted
+		ldaa $8000             ; first byte from cartridge
+		cmpa #-69;#$BB         ; presence check, if not this byte, then assume no cartridge is inserted
 	bne  CartSignatureFail
-		ldx  $8001 ; second and third bytes from cartridge
+		ldx  $8001             ; second and third bytes from cartridge
 		stx  PrintStr_Source
-		ldx  #$02C0 ; VRAM position (same as rocket patrol's title)
+		ldx  #$02C0            ; VRAM position (same as rocket patrol's title)
 		stx  PrintStr_Dest
 	jsr  Sub_PrintString@Loop
 
 @KeysLoop:
 	bsr  Sub_WaitForPlayerInput
-		cmpa #$30  ; 
+		cmpa #$30     ; check if the player pressed '0', wait for another press if yes
 	beq  @KeysLoop
-		cmpa $8003 ; how many games this cartridge has?
+		cmpa $8003    ; how many games this cartridge has? only accepts numbers equal or less than specified
 	bgt  @KeysLoop 
-		anda #$0F ; de-asciifies it to just 01~09
+		anda #$0F     ; de-asciifies it to just 01~09
 		staa $00
-		ldaa $8004 ; how many players? if this value is 0 on the cartridge, it skips the prompt
+		ldaa $8004    ; how many players? if this value is 0 on the cartridge, it skips the prompt
 	beq  @SkipPlayersPrompt
 	bsr  Sub_DrawInitialScreen
 		ldx  #String_Players
@@ -222,9 +222,9 @@ SystemInitDone:
 
 @KeysLoop2:
 	bsr  Sub_WaitForPlayerInput
-		cmpa #$30
+		cmpa #$30         ; mostly the same as above, don't accept a 0 press
 	ble  @KeysLoop2
-		cmpa $8004
+		cmpa $8004        ; and compare against the ASCII number of the cartridge, don't accept a number above it
 	bgt  @KeysLoop2
 		ldaa #$0F
 		anda Keys_Current ; de-asciifies it to just 01~09
@@ -258,7 +258,7 @@ Sub_WaitForPlayerInput:
 	jsr  Sub_GetButtonPlayer1
 	bcc  @Wait
 @InputDetected:
-		ldaa Keys_Current.w
+		ldaa Keys_Current
 JumpReturn:
 	rts  
 
@@ -325,7 +325,7 @@ Sub_SubtractBFromX:
 		psha 
 		stx  Math_TempHigh
 		ldaa Math_TempLow ; low byte of stored X
-		sba        ; a=a-b
+		sba               ; a=a-b
 		staa Math_TempLow
 	bcc  @NoCarry
 		dec  Math_TempHigh
@@ -340,46 +340,46 @@ Sub_PrintString: ; called from three places, one is a subroutine
 		stx  PrintStr_Dest   ; store destination pointer
 @Loop:
 	bsr  Sub_GetTextChar ; get character
-		ldx  PrintStr_Source   ; source pointer
+		ldx  PrintStr_Source ; source pointer
 		ldaa $00,x
-		cmpa #-1;#$FF  ; terminator is $FF
+		cmpa #-1;#$FF        ; terminator is $FF
 	bne  @Loop
 	rts  
 
 Sub_GetTextChar:
-	bsr  @CheckTextChar ; called from above
-	blt  @ControlChar ; this branch will only be taken if the current value is $80 and above
+	bsr  @CheckTextChar  ; called from above
+	blt  @ControlChar    ; this branch will only be taken if the current value is $80 and above
 		ldx  PrintStr_Dest   ; destination pointer
-		oraa #$40  ; force text invert bit on %SICC CCCC
+		oraa #$40            ; force text invert bit on %SICC CCCC
 		staa $00,x
 		inx  
 		stx  PrintStr_Dest
 	bra  Sub_GetTextChar ; increment VRAM dest and repeat
 
 @CheckTextChar:
-		ldx  PrintStr_Source    ; check for terminator byte
-		ldaa $00,x  ; get source pointer
-		cmpa #-1;#$FF   ; check if accumulator is positive or negative
+		ldx  PrintStr_Source ; check for terminator byte
+		ldaa $00,x           ; get source pointer
+		cmpa #-1;#$FF        ; check if accumulator is positive or negative
 	beq  @CharIsTerminator  ; if it's the terminator, leave and don't increment the source
 		inx  
 		stx  PrintStr_Source
 @CharIsTerminator:
 		tab  
-	rts  ; that's 4 levels until here, oof
+	rts ; that's 4 levels until here, oof
 
 
 ; control char for text sequences
 @ControlChar:
 		cmpa #-1;#$FF  ; if it's $FF, it's a terminator
 	beq  @Done
-		anda #$1F  ; isolate 5-bit parameter
-		andb #$60  ; isolate 2-bit command
+		anda #$1F      ; isolate 5-bit parameter
+		andb #$60      ; isolate 2-bit command
 		lsrb
 		lsrb 
 		lsrb 
 		lsrb 
-		lsrb       ; B= ------xx
-	beq  @Done ; (00) do nothing (unused? for fool proofing purposes?)
+		lsrb ; B= ------xx
+	beq  @Done           ; (00) do nothing (unused? for fool proofing purposes?)
 		decb 
 	beq  Sub_GetTextChar ; (01) go back to normal decode loop (unused?)
 		decb 
@@ -392,12 +392,12 @@ Sub_GetTextChar:
 		inx  
 		deca 
 	bne  @ReptLoop ; print it X times.. ah
-		stx  PrintStr_Dest ; store back destination
+		stx  PrintStr_Dest
 @Done:
 	rts  
 
 @GetByteToPrint:
-		ldx  PrintStr_Source ; source pointer
+		ldx  PrintStr_Source
 		ldab  $00,x
 		inx  
 		stx  PrintStr_Source
@@ -450,11 +450,11 @@ Data_ControllerKeyCodes:
 
 Sub_PrepareButtonLoop:
 		ldaa #$04
-		staa Keys_RowCnt ; loop counter
+		staa Keys_RowCnt    ; loop counter
 		stx  Keys_PlayerPtr ; X pointer for current player
-		ldaa $01,x ; 01F4 or 01F6 ... previous button press? these are cleared on start
+		ldaa $01,x          ; 01F4 or 01F6 ... previous button press? these are cleared on start
 	bne  @ThereWasKey
-		ldaa #-9;#$0F7  ;11110111 row select byte
+		ldaa #-9;#$0F7      ;11110111 row select byte
 		staa $00,x
 @ThereWasKey:
 		ldaa $00,x
@@ -515,23 +515,23 @@ SubFn_ButtonInRowDetected:
 		sec  
 	rts  
 @SameKey:
-		cmpb #$45 ; letter E for East, letters have a higher code than the numbers and ?! symbols
+		cmpb #$45        ; letter E for East, letters have a higher code than the numbers and ?! symbols
 	bge  @ReportNewPress ; so, if it's the directions, and they match what they were the last frame, report as new button pressed through the carry flag
-		clc  ; or else it's the other keys, and report them as not pressed if detected the same one again
+		clc              ; or else it's the other keys, and report them as not pressed if detected the same one again
 	rts  
-		nop  ; nop
+		nop ; nop
 
 
 SubFn_SetKeyMatrixRowAndAdjustPointer:
 		ldaa #-32;#$E0
-		anda $2002 ; control row selector and VDG control
+		anda $2002               ; control row selector and VDG control
 		staa Keys_KeyCodePtrHigh ; row selector with all lines selected (active low)
 		ldaa #$1F
 		anda Keys_CurRowSel
 		oraa Keys_KeyCodePtrHigh
-		staa $2002 ; select row
+		staa $2002               ; select row
 
-		ldab #$04 ; limit 4 bits
+		ldab #$04                ; limit 4 bits
 	bsr  Sub_CountSetBits
 		ldx  #Data_ControllerKeyCodes
 		stx  Keys_KeyCodePtrHigh ; sets 01F1
@@ -543,7 +543,7 @@ SubFn_SetKeyMatrixRowAndAdjustPointer:
 	bcc  @NoCarry
 		inc  Keys_KeyCodePtrHigh
 @NoCarry:
-	rts  
+	rts
 
 SubFn_PrepareNextRow:
 		ldab Keys_CurRowSel
@@ -634,9 +634,9 @@ ClearScreenNoImm:
 ;  //////////////////////////////////////////////////////
 IRQ:
 		ldaa $2002 ; acknowledge the interrupt, or else it'll fire again when returning
-		tst  I60 ; set this to anything non-zero
+		tst  I60   ; set this to anything non-zero
 	beq  @SkipRedirect
-		ldx  I60J ; and set your game's interrupt handler pointer here
+		ldx  I60J  ; and set your game's interrupt handler pointer here
 	jsr  $00,x ; return by discarding the return address
 @SkipRedirect:
 		inc  T60
@@ -649,13 +649,13 @@ IRQ:
 	bgt  @Exit
 		tst  ISEC
 	beq  @SkipRedirect2
-		ldx  ISECJ ; second interrupt hook, rocket patrol doesn't use it
+		ldx  ISECJ ; second interrupt hook, rocket patrol doesn't use it, fires every 1 second
 	jsr  $00,x
 @SkipRedirect2:
 		clr  TIME ; clear 60-frame counter
 		clc  
 
-		ldaa SECOND ; seconds counter
+		ldaa SECOND
 		cmpa #$59
 	beq  @OneMinute
 		adda #$01
@@ -666,7 +666,7 @@ IRQ:
 
 @OneMinute:
 		clr  SECOND
-		ldaa MINUTE ; minutes counter
+		ldaa MINUTE
 		cmpa #-103;#$99
 	beq  IRQ_HundredMinutes
 		adda #$01
@@ -754,7 +754,7 @@ String_RocketMenu:
 ; 3E0 - 
 ; 3F0 - 
 
-; first g-tile rows are covered by a semigraphics hud
+; first g-tile rows are offset by the semigraphics HUD
 
 ; !!! WARNING !!!
 ; POTENTIAL BAD EMULATION FROM MAME
